@@ -14,4 +14,4 @@ It mines the versioning database and looks for files that are in this database b
 	0:    ~/workspace/pset1/some-file-I-deleted.c
 	1:    ~/workspace/pset1/some-other-file-I-deleted.c
 	Enter file# to restore (or anything else to quit): 0
-	Restored ~/workspace/pset1/somefile-I-deleted.c
+	Restored ~/workspace/pset1/some-file-I-deleted.c
