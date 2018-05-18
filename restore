@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+
+# restore: restore files from the cloud9 versioning database
+
+# installation:
+# chmod a+x restore
+# mv ./restore ~/bin/restore
+
+# example:
+# $ restore
+# 0:    ~/workspace/pset1/somefile-I-deleted.c
+# 1:    ~/workspace/pset1/some-orhter-file-I-deleted.c
+# Enter file# to restore (or anything else to quit): 0
+# Restored ~/workspace/pset1/somefile-I-deleted.c
+
+import sqlite3
+from pathlib import Path, PurePath
+import os
+import sys
+import shutil
+
+DB_FILE = "./temp_collab.db"
+
+def main():
+    # locate the versioning database
+    DB_FILE = str(get_db_path())
+    # uncomment the line below to make a backup of the versioning db (safer):
+    # shutil.copyfile(str(get_db_path()), DB_FILE)
+
+    # open versioning db
+    connection = sqlite3.connect(DB_FILE)
+    cursor = connection.cursor()
+
+    # list all missing files
+    print("The following files are missing:")
+    deleted_files = []
+    file_number = 0
+    for row in cursor.execute('''SELECT * from Documents'''):
+        fname = full_path(row[1])
+        if not fname.exists():
+            deleted_files.append(row)
+            print("{}:\t~/workspace/{}".format(file_number, row[1]))
+            file_number += 1
+
+    # close db
+    connection.close()
+
+    # get file to restore
+    inp = input("Enter file# to restore (or anything else to quit): ")
+    try:
+        filenumber = int(inp)
+    except ValueError:
+        quit()
+    if filenumber >= len(deleted_files) or filenumber < 0:
+        quit()
+
+    # restore
+    file_entry = deleted_files[filenumber]
+    path = full_path(file_entry[1])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(file_entry[2])
+    print("Restored ~/workspace/{}".format(file_entry[1]))
+
+def get_db_path():
+    # find db file (~/.c9/somenumber/collab.db)
+    c9path = Path(Path.home(), '.c9')
+    for p in c9path.iterdir():
+        try:
+            i = int(str(p.stem))
+            full_db_path = Path(p, 'collab.db')
+            if(full_db_path.exists()):
+                return full_db_path
+        except ValueError:
+            pass
+    return None
+
+def full_path(rel_path):
+    return Path(Path.home(), 'workspace', rel_path)
+
+def quit():
+    print("No files restored.")
+    return sys.exit()
+
+if __name__ == "__main__":
+    main()
