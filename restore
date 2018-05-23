@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# restore: restore files from the cloud9 versioning database
+# restore: restore (undelete) files from the cloud9 versioning database
+# created by Simon Pauw, May 2018
 
 # installation:
 # chmod a+x restore
